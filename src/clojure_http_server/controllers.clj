@@ -2,6 +2,7 @@
   (:require [clojure.string :as str]
             [clojure-http-server.dal.models.user :as User]
             [clojure-http-server.dal.models.post :as Post]
+            [clojure-http-server.dal.models.like :as Like]
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
             [clojure-http-server.auth-manager :refer :all]
@@ -211,4 +212,17 @@
      :body stats
      }
     )
+  )
+
+(defn like-post
+  [req]
+  (let [post-id (:post-id (:params req))
+        user (:auth-user req)
+        ]
+    (Like/create {:post_id post-id :user_id (:id user)})
+    )
+  {
+   :status 200
+   :body nil
+   }
   )
