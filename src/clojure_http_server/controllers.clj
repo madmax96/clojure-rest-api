@@ -4,6 +4,7 @@
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
             [clojure-http-server.auth-manager :refer :all]
+            [ring.util.codec :refer [base64-decode]]
             )
   (:import (java.sql SQLException)
            (java.io File)))
@@ -87,5 +88,61 @@
        :status 200
        :body nil
        }
+    )
+  )
+
+(defn check-username
+  [req]
+  (let [username (get (:query-params req) "username" )
+        results (User/find-by-username username)]
+    {
+     :status 200
+     :body {:available (= (:c (first results)) 0 )}
+     }
+    )
+  )
+
+(defn- handle-base64Image-upload
+  [image username]
+  (let [[info image-data] (str/split image #",")
+        [image-info encoding] (str/split info #";")
+        [image-type format] (str/split image-info #"/")]
+    (if (or
+          (not (= image-type "data:image"))
+          (not (= encoding "base64"))
+          )
+      false
+      (let [decoded (base64-decode image-data)
+            filename (str username "-" (crypto.random/url-part 8) "." format)
+            ]
+        (clojure.java.io/copy
+          decoded
+          (File. (str "resources/image-uploads/" filename)))
+        filename
+        )
+      )
+    )
+  )
+(defn update-user
+  [req]
+  (let [user (:auth-user req)
+        data (:body req)
+        image (:base64Image data)
+        uploaded-image-filename (handle-base64Image-upload image (:username user))
+        ]
+    (if (not uploaded-image-filename)
+      {
+       :status 400
+       :body {:error "Only base64 encoded images are allowed"}
+       }
+      (do
+        ;Currently allowing only update of profile picture
+        (User/update-user (:id user) {:profile_picture uploaded-image-filename})
+        {
+         :status 200
+         :body (assoc user :profile_picture uploaded-image-filename)
+         }
+        )
+      )
     )
   )

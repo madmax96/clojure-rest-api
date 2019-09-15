@@ -13,6 +13,8 @@
 
 (defroutes app-routes
   (POST "/user" [] Controller/create-user)
+  (GET "/user/check-username" [] Controller/check-username)
+  (PATCH "/user" [] (auth-middleware Controller/update-user))
   (POST "/session" [] Controller/user-login)
   (DELETE "/session" [] (auth-middleware Controller/user-logout))
   (GET "/session" [] (auth-middleware Controller/get-session))

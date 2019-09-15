@@ -18,5 +18,6 @@
                  ;database connection-pooling lib
                  [com.mchange/c3p0 "0.9.5.2"]
                  [crypto-password "0.2.1"]
+                 [crypto-random "1.2.0"]
                  ]
   :repl-options {:init-ns clojure-http-server.core})

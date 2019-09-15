@@ -46,3 +46,8 @@
     {"user_id" (:generated_key key)}
     )
   )
+
+(defn update-user
+  [user-id update-map]
+  (jdbc/update! (db-connection) :users update-map ["id = ?" user-id])
+  )
