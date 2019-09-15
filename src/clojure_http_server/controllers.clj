@@ -173,3 +173,17 @@
       )
     )
   )
+
+(defn get-posts
+  [req]
+  (let [user-id (:user-id (:params req))
+        posts (if user-id
+                (Post/get-user-posts user-id)
+                (Post/get-all-posts)
+                )]
+    {
+     :status 200
+     :body posts
+     }
+    )
+  )

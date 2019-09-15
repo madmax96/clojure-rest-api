@@ -19,6 +19,9 @@
   (DELETE "/session" [] (auth-middleware Controller/user-logout))
   (GET "/session" [] (auth-middleware Controller/get-session))
   (POST "/posts" []  (auth-middleware Controller/create-post))
+  (GET "/posts" []  (auth-middleware Controller/get-posts))
+  (GET "/posts/:user-id" []  (auth-middleware Controller/get-posts))
+  (auth-middleware (route/resources "/images" {:root "image-uploads"}))
   )
 
 (defn -main
