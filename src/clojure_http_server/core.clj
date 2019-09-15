@@ -25,6 +25,7 @@
   (GET "/stats/posts" [] (auth-middleware Controller/get-posts-stats))
   (POST "/likes/:post-id" []  (auth-middleware Controller/like-post))
   (auth-middleware (route/resources "/images" {:root "image-uploads"}))
+  (route/not-found {:err "Route not found"})
   )
 
 (defn -main
