@@ -6,12 +6,17 @@
             [ring.middleware.cors :refer [wrap-cors]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [clojure-http-server.controllers :as Controller]
+            [clojure-http-server.auth-manager :refer [auth-middleware]]
             )
   (:gen-class)
   )
 
 (defroutes app-routes
-  (POST "/user" [] Controller/create-user))
+  (POST "/user" [] Controller/create-user)
+  (POST "/session" [] Controller/user-login)
+  (DELETE "/session" [] (auth-middleware Controller/user-logout))
+  (GET "/session" [] (auth-middleware Controller/get-session))
+  )
 
 (defn -main
   "This is our main entry point"

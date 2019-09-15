@@ -3,6 +3,7 @@
             [clojure-http-server.dal.models.user :as User]
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
+            [clojure-http-server.auth-manager :refer :all]
             )
   (:import (java.sql SQLException)
            (java.io File)))
@@ -36,5 +37,55 @@
          :body {:validation-errors errors}
          }
       )
+    )
+  )
+
+  (defn user-login
+  [req]
+  (let [data (:body req)
+        email (:email data)
+        password (:password data)
+        user (User/find-by-email email)
+        password-hash (:password user)
+        ]
+    (if (empty? user)
+      {
+       :status 404
+       :body {:error (str  "User with email" email "does not exist. Please Sign Up")}
+       }
+      (if (password/check password password-hash)
+        (let [auth-token
+              (create-session (:id user))]
+          {
+           :status 200
+           :headers {"auth-token" auth-token}
+           :body user
+           }
+          )
+        {
+         :status 401
+         :body {:error "Wrong password"}
+         }
+        )
+      )
+    )
+  )
+
+(defn get-session
+  [req]
+  {
+   :status 200
+   :body (:auth-user req)
+   }
+  )
+
+(defn user-logout
+  [req]
+  (let [token (get (:headers req) "auth-token" ) ]
+      (destroy-session token)
+      {
+       :status 200
+       :body nil
+       }
     )
   )
