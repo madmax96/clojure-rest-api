@@ -26,3 +26,8 @@
                                GROUP BY posts.id
                                ORDER BY created_at DESC" user-id])
   )
+
+(defn delete
+  [post-id user-id]
+  (jdbc/delete! (db-connection) :posts ["id=? AND user_id=?" post-id user-id])
+  )

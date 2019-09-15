@@ -187,3 +187,16 @@
      }
     )
   )
+
+(defn delete-post
+  [req]
+  (let [post-id (:post-id (:params req))
+        user (:auth-user req)
+        ]
+    (Post/delete post-id (:id user))
+    {
+     :status 200
+     :body nil
+     }
+    )
+  )
