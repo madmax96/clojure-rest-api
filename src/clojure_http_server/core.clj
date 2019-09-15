@@ -22,6 +22,7 @@
   (GET "/posts" []  (auth-middleware Controller/get-posts))
   (GET "/posts/:user-id" []  (auth-middleware Controller/get-posts))
   (DELETE "/posts/:post-id" []  (auth-middleware Controller/delete-post))
+  (GET "/stats/posts" [] (auth-middleware Controller/get-posts-stats))
   (auth-middleware (route/resources "/images" {:root "image-uploads"}))
   )
 

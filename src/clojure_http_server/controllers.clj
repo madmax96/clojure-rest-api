@@ -200,3 +200,15 @@
      }
     )
   )
+
+(defn get-posts-stats
+  [req]
+  (let [user (:auth-user req)
+        stats (Post/get-stats (:id user))
+        ]
+    {
+     :status 200
+     :body stats
+     }
+    )
+  )
