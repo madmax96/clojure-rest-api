@@ -1,7 +1,6 @@
 (ns clojure-http-server.dal.db
   (:import (com.mchange.v2.c3p0 ComboPooledDataSource))
-  (:gen-class)
-  )
+  (:gen-class))
 
 (def db-spec
   {:classname "com.mysql.cj.jdbc.Driver"
