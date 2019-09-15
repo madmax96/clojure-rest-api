@@ -18,6 +18,7 @@
   (POST "/session" [] Controller/user-login)
   (DELETE "/session" [] (auth-middleware Controller/user-logout))
   (GET "/session" [] (auth-middleware Controller/get-session))
+  (POST "/posts" []  (auth-middleware Controller/create-post))
   )
 
 (defn -main

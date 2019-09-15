@@ -1,6 +1,7 @@
 (ns clojure-http-server.controllers
   (:require [clojure.string :as str]
             [clojure-http-server.dal.models.user :as User]
+            [clojure-http-server.dal.models.post :as Post]
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
             [clojure-http-server.auth-manager :refer :all]
@@ -141,6 +142,32 @@
         {
          :status 200
          :body (assoc user :profile_picture uploaded-image-filename)
+         }
+        )
+      )
+    )
+  )
+
+(defn create-post
+  [req]
+  (let [user (:auth-user req) {description :description image :base64Image} (:body req)]
+    (if (or
+          (not description)
+          (not image))
+      {
+       :status 400
+       :body {:error "Description and base64Encoded image must be sent"}
+       }
+      (let [uploaded-image-filename (handle-base64Image-upload image (:username user))
+            post {
+                  :description description
+                  :image_filename uploaded-image-filename
+                  :user_id (:id user)}
+            post-id (Post/create post)
+            ]
+        {
+         :status 200
+         :body (assoc post :id post-id)
          }
         )
       )
