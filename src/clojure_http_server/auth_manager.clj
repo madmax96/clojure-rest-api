@@ -10,9 +10,7 @@
                                             WHERE sessions.token=?
                                             LIMIT 1"
                                             auth-token])]
-    (if (not user)
-      false
-      user)))
+    (if-not user false user)))
 
 (defn destroy-session
   [auth-token]

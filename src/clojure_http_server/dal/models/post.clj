@@ -38,7 +38,7 @@
                                       " user-id])
         total-posts (:total_posts stats)]
 
-    (if (= total-posts 0)
+    (if (zero? total-posts)
       (conj stats
             {:avg_likes 0 :total_likes 0})
       (conj stats

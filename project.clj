@@ -20,5 +20,6 @@
                  [crypto-password "0.2.1"]
                  [crypto-random "1.2.0"]
                  ]
-  :plugins [[lein-cljfmt "0.6.4"]]
+  :plugins [[lein-cljfmt "0.6.4"]
+            [lein-kibit "0.1.7"]]
   :repl-options {:init-ns clojure-http-server.core})

@@ -67,7 +67,7 @@
   (let [username (get (:query-params req) "username")
         results (User/find-by-username username)]
     {:status 200
-     :body {:available (= (:c (first results)) 0)}}))
+     :body {:available (zero? (:c (first results)))}}))
 
 (defn- handle-base64Image-upload
   [image username]
@@ -75,8 +75,8 @@
         [image-info encoding] (str/split info #";")
         [image-type format] (str/split image-info #"/")]
     (if (or
-         (not (= image-type "data:image"))
-         (not (= encoding "base64")))
+         (not= image-type "data:image")
+         (not= encoding "base64"))
       false
       (let [decoded (base64-decode image-data)
             filename (str username "-" (crypto.random/url-part 8) "." format)]
@@ -91,14 +91,9 @@
         data (:body req)
         image (:base64Image data)
         uploaded-image-filename (handle-base64Image-upload image (:username user))]
-    (if (not uploaded-image-filename)
-      {:status 400
-       :body {:error "Only base64 encoded images are allowed"}}
-      (do
-        ;Currently allowing only update of profile picture
-        (User/update-user (:id user) {:profile_picture uploaded-image-filename})
-        {:status 200
-         :body (assoc user :profile_picture uploaded-image-filename)}))))
+    (if-not uploaded-image-filename {:status 400, :body {:error "Only base64 encoded images are allowed"}}
+            (do (User/update-user (:id user) {:profile_picture uploaded-image-filename})
+                {:status 200, :body (assoc user :profile_picture uploaded-image-filename)}))))
 
 (defn create-post
   [req]
