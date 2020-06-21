@@ -9,7 +9,28 @@
             [clojure-http-server.auth-manager :refer [auth-middleware]])
   (:gen-class))
 
+;keeping track of all connected ws-clients
+(defonce channels (atom #{}))
+
+(defn ws-handler [req]
+  (server/with-channel req channel              ; get the channel
+                ;; communicate with client using method defined above
+    (server/on-close channel (fn [status]
+                               (println "channel closed")))
+    (if (server/websocket? channel)
+      (do
+        (println "WebSocket channel")
+        (swap! channels conj channel)
+        (server/on-receive channel (fn [data]
+                                    ; data received from client
+                                     (println "data received: " data)
+                                    ;; An optional param can pass to send!: close-after-send?
+                                    ;; When unspecified, `close-after-send?` defaults to true for HTTP channels
+                                    ;; and false for WebSocket.  (send! channel data close-after-send?)
+                                     (server/send! channel (str "Response" data)))))))) ; data is sent directly to the client
+
 (defroutes app-routes
+  (GET "/ws" [] ws-handler)
   (POST "/user" [] Controller/create-user)
   (GET "/user/check-username" [] Controller/check-username)
   (PATCH "/user" [] (auth-middleware Controller/update-user))
