@@ -3,6 +3,7 @@
             [clojure-http-server.dal.models.user :as User]
             [clojure-http-server.dal.models.post :as Post]
             [clojure-http-server.dal.models.like :as Like]
+            [clojure-http-server.dal.models.comment :as Comment]
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
             [clojure-http-server.auth-manager :refer :all]
@@ -110,6 +111,19 @@
             post-id (Post/create post)]
         {:status 200
          :body (assoc post :id post-id)}))))
+
+(defn create-comment
+  [req]
+  (let [user (:auth-user req)
+        {text :text} (:body req)
+        post-id (:post-id (:params req))]
+    (if (not text)
+      {:status 400
+       :body {:error "Comment's text must be sent"}}
+      (let [comment {:postId post-id :userId (:id user) :text text}
+            comment-id (Comment/create comment)]
+        {:status 200
+         :body (assoc comment :commentId comment-id)}))))
 
 (defn get-posts
   [req]
