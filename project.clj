@@ -19,6 +19,7 @@
                  [com.mchange/c3p0 "0.9.5.2"]
                  [crypto-password "0.2.1"]
                  [crypto-random "1.2.0"]
+                 [org.clojure/data.json "1.0.0"]
                  ]
   :plugins [[lein-cljfmt "0.6.4"]
             [lein-kibit "0.1.7"]]
