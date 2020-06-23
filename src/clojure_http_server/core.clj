@@ -7,12 +7,13 @@
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [clojure-http-server.controllers :as Controller]
             [clojure-http-server.auth-manager :refer [auth-middleware]]
-            [clojure-http-server.websocket-manager :as WS_Manager])
+            [clojure-http-server.websocket-manager :as WS-Manager])
   (:gen-class))
 
 (defroutes app-routes
-  (GET "/ws" [] (auth-middleware WS_Manager/ws-handler))
+  (GET "/ws" [] (auth-middleware WS-Manager/ws-handler))
   (POST "/user" [] Controller/create-user)
+  (POST "/subscriptions/:user-id" [] (auth-middleware Controller/subscribe-to-user))
   (GET "/user/check-username" [] Controller/check-username)
   (PATCH "/user" [] (auth-middleware Controller/update-user))
   (POST "/session" [] Controller/user-login)

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Jun 22, 2020 at 12:54 AM
+-- Generation Time: Jun 23, 2020 at 07:54 PM
 -- Server version: 10.1.37-MariaDB
 -- PHP Version: 7.2.12
 
@@ -29,9 +29,9 @@ SET time_zone = "+00:00";
 --
 
 CREATE TABLE `comments` (
-  `commentId` int(11) NOT NULL,
-  `postId` int(11) NOT NULL,
-  `userId` int(11) NOT NULL,
+  `id` int(11) NOT NULL,
+  `post_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
   `text` varchar(1024) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -76,6 +76,17 @@ CREATE TABLE `sessions` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `subscriptions`
+--
+
+CREATE TABLE `subscriptions` (
+  `subscriber_user_id` int(11) NOT NULL,
+  `subscribing_to_user_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -96,9 +107,9 @@ CREATE TABLE `users` (
 -- Indexes for table `comments`
 --
 ALTER TABLE `comments`
-  ADD PRIMARY KEY (`commentId`,`postId`,`userId`),
-  ADD KEY `comments_users_FK` (`userId`),
-  ADD KEY `comments_posts_FK` (`postId`);
+  ADD PRIMARY KEY (`id`,`post_id`,`user_id`),
+  ADD KEY `comments_users_FK` (`user_id`),
+  ADD KEY `comments_posts_FK` (`post_id`);
 
 --
 -- Indexes for table `likes`
@@ -122,6 +133,13 @@ ALTER TABLE `sessions`
   ADD KEY `sessions_user_FK` (`user_id`);
 
 --
+-- Indexes for table `subscriptions`
+--
+ALTER TABLE `subscriptions`
+  ADD PRIMARY KEY (`subscriber_user_id`,`subscribing_to_user_id`),
+  ADD KEY `subscribing_to_user_user_FK` (`subscribing_to_user_id`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -136,25 +154,25 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `comments`
 --
 ALTER TABLE `comments`
-  MODIFY `commentId` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `posts`
 --
 ALTER TABLE `posts`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `sessions`
 --
 ALTER TABLE `sessions`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
@@ -164,8 +182,8 @@ ALTER TABLE `users`
 -- Constraints for table `comments`
 --
 ALTER TABLE `comments`
-  ADD CONSTRAINT `comments_posts_FK` FOREIGN KEY (`postId`) REFERENCES `posts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT `comments_users_FK` FOREIGN KEY (`userId`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+  ADD CONSTRAINT `comments_posts_FK` FOREIGN KEY (`post_id`) REFERENCES `posts` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `comments_users_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `likes`
@@ -185,6 +203,13 @@ ALTER TABLE `posts`
 --
 ALTER TABLE `sessions`
   ADD CONSTRAINT `sessions_user_FK` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `subscriptions`
+--
+ALTER TABLE `subscriptions`
+  ADD CONSTRAINT `subscriber_user_user_FK` FOREIGN KEY (`subscriber_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `subscribing_to_user_user_FK` FOREIGN KEY (`subscribing_to_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

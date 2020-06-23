@@ -4,6 +4,8 @@
             [clojure-http-server.dal.models.post :as Post]
             [clojure-http-server.dal.models.like :as Like]
             [clojure-http-server.dal.models.comment :as Comment]
+            [clojure-http-server.dal.models.subscription :as Subscription]
+            [clojure-http-server.websocket-manager :as WS-Manager]
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
             [clojure-http-server.auth-manager :refer :all]
@@ -30,6 +32,17 @@
 
               {:status 400
                :body {:validation-errors errors}})))
+
+
+(defn subscribe-to-user
+  [req]
+  (let [user (:auth-user req)
+        subscribing-to-user-id (Integer/parseInt (:user-id (:params req)))]
+      (let [subscription {:subscriber_user_id (:id user) :subscribing_to_user_id subscribing-to-user-id }]
+        (Subscription/create subscription)
+        (WS-Manager/emmit-user-subscription-event subscription)
+        {:status 200
+         :body subscription})))
 
 (defn user-login
   [req]
@@ -120,10 +133,10 @@
     (if (not text)
       {:status 400
        :body {:error "Comment's text must be sent"}}
-      (let [comment {:postId post-id :userId (:id user) :text text}
+      (let [comment {:post_id post-id :user_id (:id user) :text text}
             comment-id (Comment/create comment)]
         {:status 200
-         :body (assoc comment :commentId comment-id)}))))
+         :body (assoc comment :id comment-id)}))))
 
 (defn get-posts
   [req]
