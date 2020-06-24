@@ -22,6 +22,11 @@
                                GROUP BY posts.id
                                ORDER BY created_at DESC" user-id]))
 
+(defn get-by-id
+  [post-id]
+  (first (jdbc/query (db-connection) ["SELECT users.fullname,users.username,users.profile_picture, posts.id, posts.user_id, posts.image_filename
+                               FROM posts JOIN users ON posts.user_id=users.id WHERE posts.id=? LIMIT 1" post-id])))
+
 (defn delete
   [post-id user-id]
   (jdbc/delete! (db-connection) :posts ["id=? AND user_id=?" post-id user-id]))

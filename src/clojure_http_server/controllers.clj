@@ -33,16 +33,15 @@
               {:status 400
                :body {:validation-errors errors}})))
 
-
 (defn subscribe-to-user
   [req]
   (let [user (:auth-user req)
         subscribing-to-user-id (Integer/parseInt (:user-id (:params req)))]
-      (let [subscription {:subscriber_user_id (:id user) :subscribing_to_user_id subscribing-to-user-id }]
-        (Subscription/create subscription)
-        (WS-Manager/emmit-user-subscription-event subscription)
-        {:status 200
-         :body subscription})))
+    (let [subscription {:subscriber_user_id (:id user) :subscribing_to_user_id subscribing-to-user-id}]
+      (Subscription/create subscription)
+      (WS-Manager/emmit-user-subscription-event subscription)
+      {:status 200
+       :body subscription})))
 
 (defn user-login
   [req]
@@ -118,23 +117,29 @@
       {:status 400
        :body {:error "Description and base64Encoded image must be sent"}}
       (let [uploaded-image-filename (handle-base64Image-upload image (:username user))
+            user-id  (:id user)
             post {:description description
                   :image_filename uploaded-image-filename
-                  :user_id (:id user)}
-            post-id (Post/create post)]
+                  :user_id user-id}
+            post-id (Post/create post)
+            created-post (assoc post :id post-id)
+            subscriber-ids (Subscription/get-subscribers-for-user user-id)]
+        (WS-Manager/emmit-new-post-event subscriber-ids created-post)
         {:status 200
-         :body (assoc post :id post-id)}))))
+         :body created-post}))))
 
 (defn create-comment
   [req]
   (let [user (:auth-user req)
         {text :text} (:body req)
-        post-id (:post-id (:params req))]
+        post-id (Integer/parseInt (:post-id (:params req)))]
     (if (not text)
       {:status 400
        :body {:error "Comment's text must be sent"}}
       (let [comment {:post_id post-id :user_id (:id user) :text text}
-            comment-id (Comment/create comment)]
+            comment-id (Comment/create comment)
+            post (Post/get-by-id post-id)]
+        (WS-Manager/emmit-new-comment-event {:post post :user user :text text})
         {:status 200
          :body (assoc comment :id comment-id)}))))
 
@@ -164,8 +169,10 @@
 
 (defn like-post
   [req]
-  (let [post-id (:post-id (:params req))
-        user (:auth-user req)]
-    (Like/create {:post_id post-id :user_id (:id user)}))
+  (let [post-id (Integer/parseInt (:post-id (:params req)))
+        user (:auth-user req)
+        liked-post (Post/get-by-id post-id)]
+    (Like/create {:post_id post-id :user_id (:id user)})
+    (WS-Manager/emmit-post-like-event liked-post user))
   {:status 200
    :body nil})
