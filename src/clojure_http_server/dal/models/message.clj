@@ -5,7 +5,8 @@
 (defn create
   "creates new message"
   [message]
-  (jdbc/insert! (db-connection) :messages message))
+  (let [[res] (jdbc/insert! (db-connection) :messages message)]
+    (:generated_key res)))
 
 (defn get-users-chat
   [first-user-id second-user-id]

@@ -1,7 +1,8 @@
 (ns clojure-http-server.websocket-manager
   (:require [org.httpkit.server :as server]
             [clojure.data.json :as json]
-            [clojure-http-server.dal.models.message :as Message]))
+            [clojure-http-server.dal.models.message :as Message]
+            [clojure-http-server.utils :as Utils]))
 
 (declare handle-new-message-event handle-message-seen-event)
 (defonce events {:new-message "New Message"
@@ -16,7 +17,7 @@
 (defonce channels (atom {}))
 
 (defn- handle-ws-message [message user]
-  (let [event (:event message) data (:data message)]
+  (let [event (get message "event") data (get message "data")]
     (cond (= event (:new-message events)) (handle-new-message-event data user)
           (= event (:message-seen events)) (handle-message-seen-event data user))))
 
@@ -62,8 +63,14 @@
     (if channel (server/send! channel (json/write-str {:event (:new-comment events) :data comment})))))
 
 (defn handle-new-message-event
-  [{receiver-user-id :receiverUserId type :type content :content} user]
-  (let [message {:sender_user_id (:id user) :receiver_user_id receiver-user-id :content content :type type}
+  [{receiver-user-id "receiverUserId" type "type"  content "content"} user]
+  (println "handling new message event")
+  (let [message {:sender_user_id (:id user)
+                 :receiver_user_id receiver-user-id
+                 :content (if (= type "image")
+                            (Utils/handle-base64Image-upload content (:username user)) ;if type of message is image, we store image filename in content field
+                            content)
+                 :type type}
         message-id (Message/create message)
         created-message (assoc message :id message-id)
         channel (get @channels receiver-user-id)]

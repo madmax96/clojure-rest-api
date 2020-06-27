@@ -1,4 +1,7 @@
-(ns clojure-http-server.utils)
+(ns clojure-http-server.utils
+  (:require [clojure.string :as str]
+            [ring.util.codec :refer [base64-decode]])
+  (:import (java.io File)))
 
 ;Validation
 
@@ -28,3 +31,19 @@
   `(let [~errors-name (validate ~to-validate ~validations)]
      (if (empty? ~errors-name)
        ~@then-else)))
+
+(defn handle-base64Image-upload
+  [image username]
+  (let [[info image-data] (str/split image #",")
+        [image-info encoding] (str/split info #";")
+        [image-type format] (str/split image-info #"/")]
+    (if (or
+         (not= image-type "data:image")
+         (not= encoding "base64"))
+      false
+      (let [decoded (base64-decode image-data)
+            filename (str username "-" (crypto.random/url-part 8) "." format)]
+        (clojure.java.io/copy
+         decoded
+         (File. (str "resources/image-uploads/" filename)))
+        filename))))

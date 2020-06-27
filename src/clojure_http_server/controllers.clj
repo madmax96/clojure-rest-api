@@ -7,7 +7,7 @@
             [clojure-http-server.dal.models.subscription :as Subscription]
             [clojure-http-server.dal.models.message :as Message]
             [clojure-http-server.websocket-manager :as WS-Manager]
-            [clojure-http-server.utils :refer [if-valid]]
+            [clojure-http-server.utils :as Utils]
             [crypto.password.scrypt :as password]
             [clojure-http-server.auth-manager :refer :all]
             [ring.util.codec :refer [base64-decode]])
@@ -17,22 +17,22 @@
 (defn create-user
   [req]
   (let [user-data (:body req)]
-    (if-valid user-data  User/user-validations errors
-              (try
-                (let [inserted_id (User/insert (update user-data :password password/encrypt))]
-                  {:status 200
-                   :body  inserted_id})
+    (Utils/if-valid user-data  User/user-validations errors
+                    (try
+                      (let [inserted_id (User/insert (update user-data :password password/encrypt))]
+                        {:status 200
+                         :body  inserted_id})
 
-                (catch SQLException e
-                  {:status 400
-                   :body {:error (.getMessage e)}})
+                      (catch SQLException e
+                        {:status 400
+                         :body {:error (.getMessage e)}})
 
-                (catch Exception e
-                  {:status 500
-                   :body {:error "Unknown error"}}))
+                      (catch Exception e
+                        {:status 500
+                         :body {:error "Unknown error"}}))
 
-              {:status 400
-               :body {:validation-errors errors}})))
+                    {:status 400
+                     :body {:validation-errors errors}})))
 
 (defn subscribe-to-user
   [req]
@@ -83,28 +83,12 @@
     {:status 200
      :body {:available (zero? (:c (first results)))}}))
 
-(defn- handle-base64Image-upload
-  [image username]
-  (let [[info image-data] (str/split image #",")
-        [image-info encoding] (str/split info #";")
-        [image-type format] (str/split image-info #"/")]
-    (if (or
-         (not= image-type "data:image")
-         (not= encoding "base64"))
-      false
-      (let [decoded (base64-decode image-data)
-            filename (str username "-" (crypto.random/url-part 8) "." format)]
-        (clojure.java.io/copy
-         decoded
-         (File. (str "resources/image-uploads/" filename)))
-        filename))))
-
 (defn update-user
   [req]
   (let [user (:auth-user req)
         data (:body req)
         image (:base64Image data)
-        uploaded-image-filename (handle-base64Image-upload image (:username user))]
+        uploaded-image-filename (Utils/handle-base64Image-upload image (:username user))]
     (if-not uploaded-image-filename {:status 400, :body {:error "Only base64 encoded images are allowed"}}
             (do (User/update-user (:id user) {:profile_picture uploaded-image-filename})
                 {:status 200, :body (assoc user :profile_picture uploaded-image-filename)}))))
@@ -117,14 +101,15 @@
          (not image))
       {:status 400
        :body {:error "Description and base64Encoded image must be sent"}}
-      (let [uploaded-image-filename (handle-base64Image-upload image (:username user))
+      (let [uploaded-image-filename (Utils/handle-base64Image-upload image (:username user))
             user-id  (:id user)
             post {:description description
                   :image_filename uploaded-image-filename
                   :user_id user-id}
             post-id (Post/create post)
             created-post (assoc post :id post-id)
-            subscriber-ids (Subscription/get-subscribers-for-user user-id)]
+            subscribers (Subscription/get-subscribers-for-user user-id)
+            subscriber-ids (map (fn [user] (:id user)) subscribers)]
         (WS-Manager/emmit-new-post-event subscriber-ids created-post)
         {:status 200
          :body created-post}))))
@@ -168,8 +153,7 @@
     {:status 200
      :body stats}))
 
-(defn like-post
-  [req]
+(defn like-post [req]
   (let [post-id (Integer/parseInt (:post-id (:params req)))
         user (:auth-user req)
         liked-post (Post/get-by-id post-id)]
@@ -184,3 +168,9 @@
         messages (Message/get-users-chat user-id (:id auth-user))]
     {:status 200
      :body messages}))
+
+(defn get-subscribers-for-user [req]
+  (let [auth-user (:auth-user req)
+        subscribers (Subscription/get-subscribers-for-user (:id auth-user))]
+    {:status 200
+     :body subscribers}))
