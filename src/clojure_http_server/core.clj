@@ -26,6 +26,7 @@
   (GET "/stats/posts" [] (auth-middleware Controller/get-posts-stats))
   (POST "/posts/:post-id/comment" [] (auth-middleware Controller/create-comment))
   (POST "/likes/:post-id" []  (auth-middleware Controller/like-post))
+  (GET "/messages/:user-id" [] (auth-middleware Controller/get-users-chat))
   (auth-middleware (route/resources "/images" {:root "image-uploads"}))
   (route/not-found {:err "Route not found"}))
 

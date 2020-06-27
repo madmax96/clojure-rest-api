@@ -5,6 +5,7 @@
             [clojure-http-server.dal.models.like :as Like]
             [clojure-http-server.dal.models.comment :as Comment]
             [clojure-http-server.dal.models.subscription :as Subscription]
+            [clojure-http-server.dal.models.message :as Message]
             [clojure-http-server.websocket-manager :as WS-Manager]
             [clojure-http-server.utils :refer [if-valid]]
             [crypto.password.scrypt :as password]
@@ -176,3 +177,10 @@
     (WS-Manager/emmit-post-like-event liked-post user))
   {:status 200
    :body nil})
+
+(defn get-users-chat [req]
+  (let [user-id (:user-id (:params req))
+        auth-user (:auth-user req)
+        messages (Message/get-users-chat user-id (:id auth-user))]
+    {:status 200
+     :body messages}))
