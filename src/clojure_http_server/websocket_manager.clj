@@ -77,7 +77,7 @@
     (if channel (server/send! channel (json/write-str {:event (:new-message events) :data created-message})))))
 
 (defn handle-message-seen-event
-  [{message-id :messageId sender-user-id :senderUserId} {user-id :id}]
+  [{message-id "messageId" sender-user-id "senderUserId"} {user-id :id}]
   (Message/update-seen message-id user-id)
   (let [channel (get @channels sender-user-id)]
     (if channel (server/send! channel (json/write-str {:event (:message-seen events) :data {:message-id message-id :user-id user-id}})))))
